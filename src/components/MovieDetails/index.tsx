@@ -19,6 +19,7 @@ import IssueModal from '@app/components/IssueModal';
 import ManageSlideOver from '@app/components/ManageSlideOver';
 import MediaSlider from '@app/components/MediaSlider';
 import PersonCard from '@app/components/PersonCard';
+import ReDownloadModal from '@app/components/ReDownloadModal';
 import RequestButton from '@app/components/RequestButton';
 import Slider from '@app/components/Slider';
 import StatusBadge from '@app/components/StatusBadge';
@@ -30,8 +31,10 @@ import globalMessages from '@app/i18n/globalMessages';
 import ErrorPage from '@app/pages/_error';
 import { sortCrewPriority } from '@app/utils/creditHelpers';
 import defineMessages from '@app/utils/defineMessages';
+import { isMediaAvailable } from '@app/utils/mediaHelpers';
 import { refreshIntervalHelper } from '@app/utils/refreshIntervalHelper';
 import {
+  ArrowPathIcon,
   ArrowRightCircleIcon,
   CloudIcon,
   CogIcon,
@@ -95,6 +98,7 @@ const messages = defineMessages('components.MovieDetails', {
   digitalrelease: 'Digital Release',
   physicalrelease: 'Physical Release',
   reportissue: 'Report an Issue',
+  redownload: 'Re-Download',
   managemovie: 'Manage Movie',
   rtcriticsscore: 'Rotten Tomatoes Tomatometer',
   rtaudiencescore: 'Rotten Tomatoes Audience Score',
@@ -124,6 +128,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
   const minStudios = 3;
   const [showMoreStudios, setShowMoreStudios] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showReDownloadModal, setShowReDownloadModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [toggleWatchlist, setToggleWatchlist] = useState<boolean>(
     !movie?.onUserWatchlist
@@ -456,6 +461,13 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
         </div>
       )}
       <PageTitle title={data.title} />
+      <ReDownloadModal
+        onCancel={() => setShowReDownloadModal(false)}
+        show={showReDownloadModal}
+        mediaType="movie"
+        tmdbId={data.id}
+        mediaId={data.mediaInfo?.id ?? 0}
+      />
       <IssueModal
         onCancel={() => setShowIssueModal(false)}
         show={showIssueModal}
@@ -623,7 +635,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
             tmdbId={data.id}
             onUpdate={() => revalidate()}
           />
-          {(data.mediaInfo?.status === MediaStatus.AVAILABLE ||
+          {(isMediaAvailable(data.mediaInfo?.status) ||
             (settings.currentSettings.movie4kEnabled &&
               hasPermission(
                 [Permission.REQUEST_4K, Permission.REQUEST_4K_MOVIE],
@@ -631,7 +643,28 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
                   type: 'or',
                 }
               ) &&
-              data.mediaInfo?.status4k === MediaStatus.AVAILABLE)) &&
+              isMediaAvailable(data.mediaInfo?.status4k))) &&
+            hasPermission(Permission.RE_DOWNLOAD) &&
+            data.mediaInfo && (
+              <Tooltip content={intl.formatMessage(messages.redownload)}>
+                <Button
+                  buttonType="primary"
+                  onClick={() => setShowReDownloadModal(true)}
+                  className="ml-2 first:ml-0"
+                >
+                  <ArrowPathIcon />
+                </Button>
+              </Tooltip>
+            )}
+          {(isMediaAvailable(data.mediaInfo?.status) ||
+            (settings.currentSettings.movie4kEnabled &&
+              hasPermission(
+                [Permission.REQUEST_4K, Permission.REQUEST_4K_MOVIE],
+                {
+                  type: 'or',
+                }
+              ) &&
+              isMediaAvailable(data.mediaInfo?.status4k))) &&
             hasPermission(
               [Permission.CREATE_ISSUES, Permission.MANAGE_ISSUES],
               {
