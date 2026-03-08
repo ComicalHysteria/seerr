@@ -1,0 +1,29 @@
+{
+  "name": "Seerr Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "containerEnv": {
+    "NODE_ENV": "development"
+  },
+  "forwardPorts": [5055],
+  "portsAttributes": {
+    "5055": {
+      "label": "Seerr App"
+    }
+  },
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && pnpm install",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "remoteUser": "node"
+}
