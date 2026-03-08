@@ -4,10 +4,17 @@
   "containerEnv": {
     "NODE_ENV": "development"
   },
-  "forwardPorts": [5055],
+  "forwardPorts": [
+    5055
+  ],
   "portsAttributes": {
     "5055": {
       "label": "Seerr App"
+    }
+  },
+  "features": {
+    "ghcr.io/tailscale/codespace/tailscale": {
+      "version": "latest"
     }
   },
   "postCreateCommand": "corepack enable && corepack prepare pnpm@10.24.0 --activate && pnpm install",
