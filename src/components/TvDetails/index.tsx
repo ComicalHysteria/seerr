@@ -20,6 +20,7 @@ import IssueModal from '@app/components/IssueModal';
 import ManageSlideOver from '@app/components/ManageSlideOver';
 import MediaSlider from '@app/components/MediaSlider';
 import PersonCard from '@app/components/PersonCard';
+import ReDownloadModal from '@app/components/ReDownloadModal';
 import RequestButton from '@app/components/RequestButton';
 import RequestModal from '@app/components/RequestModal';
 import Slider from '@app/components/Slider';
@@ -33,10 +34,12 @@ import globalMessages from '@app/i18n/globalMessages';
 import ErrorPage from '@app/pages/_error';
 import { sortCrewPriority } from '@app/utils/creditHelpers';
 import defineMessages from '@app/utils/defineMessages';
+import { isMediaAvailable } from '@app/utils/mediaHelpers';
 import { refreshIntervalHelper } from '@app/utils/refreshIntervalHelper';
 import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import {
+  ArrowPathIcon,
   ArrowRightCircleIcon,
   CogIcon,
   ExclamationTriangleIcon,
@@ -55,8 +58,8 @@ import {
   MediaType,
 } from '@server/constants/media';
 import { MediaServerType } from '@server/constants/server';
-import type { Crew } from '@server/models/common';
 import type { TvDetails as TvDetailsType } from '@server/models/Tv';
+import type { Crew } from '@server/models/common';
 import axios from 'axios';
 import { countries } from 'country-flag-icons';
 import 'country-flag-icons/3x2/flags.css';
@@ -91,6 +94,7 @@ const messages = defineMessages('components.TvDetails', {
   productioncountries:
     'Production {countryCount, plural, one {Country} other {Countries}}',
   reportissue: 'Report an Issue',
+  redownload: 'Re-Download',
   manageseries: 'Manage Series',
   seasonstitle: 'Seasons',
   episodeCount: '{episodeCount, plural, one {# Episode} other {# Episodes}}',
@@ -120,6 +124,7 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showManager, setShowManager] = useState(router.query.manage == '1');
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showReDownloadModal, setShowReDownloadModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [toggleWatchlist, setToggleWatchlist] = useState<boolean>(
     !tv?.onUserWatchlist
@@ -498,6 +503,13 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
         onComplete={onClickHideItemBtn}
         isUpdating={isBlocklistUpdating}
       />
+      <ReDownloadModal
+        onCancel={() => setShowReDownloadModal(false)}
+        show={showReDownloadModal}
+        mediaType="tv"
+        tmdbId={data.id}
+        mediaId={data.mediaInfo?.id ?? 0}
+      />
       <IssueModal
         onCancel={() => setShowIssueModal(false)}
         show={showIssueModal}
@@ -669,15 +681,30 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
             isShowComplete={isComplete}
             is4kShowComplete={is4kComplete}
           />
-          {(data.mediaInfo?.status === MediaStatus.AVAILABLE ||
-            data.mediaInfo?.status === MediaStatus.PARTIALLY_AVAILABLE ||
+          {(isMediaAvailable(data.mediaInfo?.status, true) ||
             (settings.currentSettings.series4kEnabled &&
               hasPermission([Permission.REQUEST_4K, Permission.REQUEST_4K_TV], {
                 type: 'or',
               }) &&
-              (data.mediaInfo?.status4k === MediaStatus.AVAILABLE ||
-                data?.mediaInfo?.status4k ===
-                  MediaStatus.PARTIALLY_AVAILABLE))) &&
+              isMediaAvailable(data.mediaInfo?.status4k, true))) &&
+            hasPermission(Permission.RE_DOWNLOAD) &&
+            data.mediaInfo && (
+              <Tooltip content={intl.formatMessage(messages.redownload)}>
+                <Button
+                  buttonType="primary"
+                  onClick={() => setShowReDownloadModal(true)}
+                  className="ml-2 first:ml-0"
+                >
+                  <ArrowPathIcon />
+                </Button>
+              </Tooltip>
+            )}
+          {(isMediaAvailable(data.mediaInfo?.status, true) ||
+            (settings.currentSettings.series4kEnabled &&
+              hasPermission([Permission.REQUEST_4K, Permission.REQUEST_4K_TV], {
+                type: 'or',
+              }) &&
+              isMediaAvailable(data.mediaInfo?.status4k, true))) &&
             hasPermission(
               [Permission.CREATE_ISSUES, Permission.MANAGE_ISSUES],
               {

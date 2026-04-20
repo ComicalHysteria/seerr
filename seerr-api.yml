@@ -40,6 +40,8 @@ tags:
     description: Collection of media to watch later
   - name: blocklist
     description: Blocklisted media from discovery page.
+  - name: redownload
+    description: Endpoints related to re-downloading media.
 servers:
   - url: '{server}/api/v1'
     variables:
@@ -7210,6 +7212,65 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/User'
+  /redownload/{mediaId}:
+    post:
+      summary: Re-download media
+      description: >-
+        Triggers a re-download for the given media item. Deletes existing files
+        and initiates a new search in Radarr/Sonarr. Requires the `RE_DOWNLOAD`
+        permission.
+      tags:
+        - redownload
+      parameters:
+        - in: path
+          name: mediaId
+          description: Media ID
+          required: true
+          example: '1'
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seasons:
+                  type: array
+                  items:
+                    type: number
+                episodes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      seasonNumber:
+                        type: number
+                      episodeNumber:
+                        type: number
+                is4k:
+                  type: boolean
+      responses:
+        '200':
+          description: Re-download initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request (e.g. missing service configuration)
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Media not found
+        '500':
+          description: Internal server error
   /collection/{collectionId}:
     get:
       summary: Get collection details

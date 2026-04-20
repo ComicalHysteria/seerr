@@ -85,6 +85,8 @@ export const messages = defineMessages('components.PermissionEdit', {
   viewblocklistedItems: 'View blocklisted media.',
   viewblocklistedItemsDescription:
     'Grant permission to view blocklisted media.',
+  redownload: 'Re-Download Media',
+  redownloadDescription: 'Grant permission to re-download media files.',
 });
 
 interface PermissionEditProps {
@@ -354,6 +356,12 @@ export const PermissionEdit = ({
           permission: Permission.VIEW_BLOCKLIST,
         },
       ],
+    },
+    {
+      id: 'redownload',
+      name: intl.formatMessage(messages.redownload),
+      description: intl.formatMessage(messages.redownloadDescription),
+      permission: Permission.RE_DOWNLOAD,
     },
   ];
 
